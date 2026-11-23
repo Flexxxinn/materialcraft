@@ -1010,6 +1010,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "craft-png"
+version = "0.1.0"
+source = "git+https://github.com/storytold/craft-libs?rev=c42c34bfa127b095fb0a8d5ccaba0c168c254062#c42c34bfa127b095fb0a8d5ccaba0c168c254062"
+dependencies = [
+ "png",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "craft-quit"
 version = "0.1.0"
 source = "git+https://github.com/storytold/craft-libs?rev=453b0da782ccef39be9a6dac8d27c80b553ef1cc#453b0da782ccef39be9a6dac8d27c80b553ef1cc"
@@ -3002,6 +3011,7 @@ dependencies = [
  "craft-dialogs",
  "craft-keymap",
  "craft-platform",
+ "craft-png",
  "craft-quit",
  "craft-ui",
  "craft-update",
