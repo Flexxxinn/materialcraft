@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, SystemTime};
 
-use image::{ImageDecoder, ImageEncoder};
+use image::ImageDecoder;
 use sha2::{Digest, Sha256};
 
 use super::preview_cache_settings::{PreviewCacheLimits, PreviewCacheSettings, PreviewCacheState};
@@ -128,7 +128,7 @@ impl PreviewDiskCache {
         }
 
         let mut bytes = Vec::new();
-        image::codecs::png::PngEncoder::new(&mut bytes).write_image(pixels, side, side, image::ExtendedColorType::Rgba8).map_err(io::Error::other)?;
+        craft_png::write_8bit(&mut bytes, side, side, craft_png::Layout::Rgba, pixels).map_err(io::Error::other)?;
         if bytes.len() as u64 > MAX_FILE_BYTES {
             return Ok(());
         }

@@ -30,6 +30,7 @@ zip = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 craft-atomic = { workspace = true }
+craft-png = { workspace = true }
 sha2 = { workspace = true }
 sys-locale = "0.3"
 craft-update = { workspace = true }
