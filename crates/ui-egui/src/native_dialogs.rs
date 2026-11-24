@@ -141,6 +141,7 @@ pub(crate) fn poll(app: &mut MaterialCraftApp) {
                 Some(path) => chosen(app, then, &path),
                 None => cancelled(app, then),
             },
+            Answer::Saved { path, .. } => chosen(app, then, &path),
             Answer::Cancelled | Answer::Message(_) => cancelled(app, then),
             Answer::Unavailable(why) => {
                 app.toast(format!("{}: {why}", tr("The file dialog could not be shown")), true);
