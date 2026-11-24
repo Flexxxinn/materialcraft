@@ -790,7 +790,9 @@ mod tests {
 
         let mut app = app();
         app.ui.recent.push("recent.sbs".into());
-        let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
+        let mut harness = egui_kittest::Harness::builder()
+            .with_context_setup(crate::framework::install_headless)
+            .build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
         harness.run_steps(2);
         harness.get_by_label("File").click();
         harness.run_steps(3);
@@ -810,7 +812,9 @@ mod tests {
 
         let mut app = app();
         app.dialogs.ask(craft_dialogs::FileDialog::open(), crate::native_dialogs::Then::OpenPackage);
-        let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
+        let mut harness = egui_kittest::Harness::builder()
+            .with_context_setup(crate::framework::install_headless)
+            .build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
         harness.run_steps(2);
         harness.get_by_label("File").click();
         harness.run_steps(3);

@@ -344,9 +344,13 @@ pub fn apply(ctx: &egui::Context, b: Brightness, accent: Accent) {
         v.selection.stroke = Stroke::new(1.0, t.accent);
         v.hyperlink_color = t.accent;
         let w = &mut v.widgets;
-        for (widget, fill) in
-            [(&mut w.noninteractive, t.panel), (&mut w.inactive, t.button), (&mut w.hovered, t.row_hover), (&mut w.active, t.tool_active), (&mut w.open, t.row_hover)]
-        {
+        for (widget, fill) in [
+            (&mut w.noninteractive, t.panel),
+            (&mut w.inactive, t.button),
+            (&mut w.hovered, t.row_hover),
+            (&mut w.active, t.tool_active),
+            (&mut w.open, t.row_hover),
+        ] {
             widget.bg_fill = fill;
             widget.weak_bg_fill = fill;
             widget.corner_radius = t.cr();

@@ -227,7 +227,8 @@ mod tests {
     #[test]
     fn a_bound_press_and_its_text_leave_the_input() {
         let mut input = InputState::default();
-        input.events = vec![press(EguiKey::M, egui::Modifiers::NONE), Event::Text("m".into()), press(EguiKey::Q, egui::Modifiers::NONE), Event::Text("q".into())];
+        input.events =
+            vec![press(EguiKey::M, egui::Modifiers::NONE), Event::Text("m".into()), press(EguiKey::Q, egui::Modifiers::NONE), Event::Text("q".into())];
         let hits = Dispatcher::default().dispatch_filtered(&mut input, &keymap(), |_| true);
         assert_eq!(hits.iter().map(|hit| hit.command.id.as_str()).collect::<Vec<_>>(), ["tool.marquee"]);
         assert_eq!(input.events, [press(EguiKey::Q, egui::Modifiers::NONE), Event::Text("q".into())]);

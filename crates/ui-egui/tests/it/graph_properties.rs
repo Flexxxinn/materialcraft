@@ -25,7 +25,8 @@ fn harness(render: bool) -> Harness<'static, MaterialCraftApp> {
 }
 
 fn app_harness(app: MaterialCraftApp, render: bool) -> Harness<'static, MaterialCraftApp> {
-    let builder = Harness::builder().with_context_setup(materialcraft_ui_egui::framework::install_headless).with_size(vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0);
+    let builder =
+        Harness::builder().with_context_setup(materialcraft_ui_egui::framework::install_headless).with_size(vec2(1600.0, 1000.0)).with_step_dt(1.0 / 60.0);
     let builder = if render { builder.wgpu() } else { builder };
     let mut harness = builder.build_ui_state(
         |ui, app: &mut MaterialCraftApp| {
