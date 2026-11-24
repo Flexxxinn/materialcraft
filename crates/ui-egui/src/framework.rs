@@ -23,6 +23,8 @@ use craft_window::policy::Decision;
 use craft_window::system::WindowSystem;
 
 use crate::MaterialCraftApp;
+use crate::shell::modality::Modality;
+use egui::ViewportId;
 
 /// Each pass of the root window, first in `App::ui`: hands the runtime the native window it answers the hit test of
 /// (Windows) and fits the window to its monitor once.
@@ -90,12 +92,13 @@ impl MaterialCraftApp {
     pub fn before_input(&mut self, ctx: &egui::Context) {
         // MaterialCraft applies the interface scale itself (`step`), so the runtime keeps the zoom it applied last.
         let scale = ctx.zoom_factor();
-        embed::before_input(ctx, |output| self.frame_input(output, scale));
+        embed::before_input(ctx, |output| self.frame_input(ctx, output, scale));
     }
 
     /// The root values of this frame. MaterialCraft registers no commands with the runtime and lets it toggle no
-    /// chrome, so the output carries nothing it acts on.
-    fn frame_input(&mut self, _output: FrameOutput, scale: f32) -> FrameInput {
+    /// chrome, so the output carries nothing it acts on. While one of MaterialCraft's own egui modals shows in the
+    /// root window, the runtime blocks the panels floated into windows of their own.
+    pub(crate) fn frame_input(&mut self, ctx: &egui::Context, _output: FrameOutput, scale: f32) -> FrameInput {
         use crate::theme::Brightness;
         let mode = match self.ui.prefs.brightness {
             Brightness::Light | Brightness::MediumLight => craft_theme::Mode::Light,
@@ -103,7 +106,8 @@ impl MaterialCraftApp {
         };
         let direction = if crate::i18n::is_rtl() { craft_i18n::Direction::Rtl } else { craft_i18n::Direction::Ltr };
         let root = RootEnv::new().mode(mode).scale(Scale::new(scale)).direction(direction);
-        FrameInput::new(root).host(Arc::clone(&self.framework_host))
+        let app_modal = Modality::capture(self, ctx).is_blocked().then_some(ViewportId::ROOT);
+        FrameInput::new(root).host(Arc::clone(&self.framework_host)).app_modal(app_modal)
     }
 
     /// The framework's part of `App::logic`, after MaterialCraft's own: the root window's close path. Unsaved work

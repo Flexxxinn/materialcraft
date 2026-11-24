@@ -397,6 +397,20 @@ mod tests {
     }
 
     #[test]
+    fn floating_panels_stop_while_a_dialog_is_open() {
+        let mut app = crate::MaterialCraftApp::headless(materialcraft_engine::sample_session(), crate::UiState::default());
+        let ctx = egui::Context::default();
+        let modal = |app: &mut crate::MaterialCraftApp| app.frame_input(&ctx, Default::default(), 1.0).app_modal;
+
+        assert_eq!(modal(&mut app), None);
+        app.ui.windows.unsaved = Some(crate::unsaved::Guarded::Quit);
+        assert_eq!(modal(&mut app), Some(egui::ViewportId::ROOT), "the panels stop on the frame the prompt opens");
+        app.ui.windows.unsaved = None;
+        app.ui.windows.shortcuts = true;
+        assert_eq!(modal(&mut app), None, "the Shortcuts list does not block");
+    }
+
+    #[test]
     fn default_dock_round_trips() {
         let dock = Dock::default();
         let json = serde_json::to_string(&dock).unwrap();
