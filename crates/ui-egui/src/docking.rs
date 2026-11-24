@@ -8,8 +8,10 @@
 //! cannot close or float. The layout persists with `UiState` as a craft-ui `Workspace`; a layout
 //! that does not load or validate becomes the default.
 
-use craft_ui::docking::{Action, DockArea, DockContent, DockStyle, Layout, Location, Node, PanelLimits, PanelState, Permissions, Placement};
-use craft_ui::layout::{SplitAxis, SplitSize};
+use craft_behavior::dock::{Action, DockPlacement, Layout, Location, Node, PanelState, Permissions};
+use craft_ui::docking::{DockArea, DockContent, DockStyle, PanelLimits};
+use craft_behavior::flow::Axis;
+use craft_behavior::dock::SplitSize;
 use egui::{Id, Margin, RichText, Ui, vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -75,7 +77,7 @@ impl Panel {
 }
 
 /// The saved panel arrangement: craft-ui's workspace over MaterialCraft's panels.
-pub type Workspace = craft_ui::docking::Workspace<Panel>;
+pub type Workspace = craft_behavior::dock::Workspace<Panel>;
 
 /// The graph never moves, floats, closes or takes tabs; panels dock beside it.
 pub fn permissions(panel: &Panel) -> Permissions {
@@ -86,7 +88,7 @@ fn tabs(panels: &[Panel]) -> Node<Panel> {
     Node::Tabs { panels: panels.to_vec(), active: 0 }
 }
 
-fn split(axis: SplitAxis, ratio: f32, first: Node<Panel>, second: Node<Panel>) -> Node<Panel> {
+fn split(axis: Axis, ratio: f32, first: Node<Panel>, second: Node<Panel>) -> Node<Panel> {
     Node::Split { axis, size: SplitSize::Ratio(ratio), first: Box::new(first), second: Box::new(second) }
 }
 
@@ -94,17 +96,17 @@ fn split(axis: SplitAxis, ratio: f32, first: Node<Panel>, second: Node<Panel>) -
 /// middle; properties on the right. Console and history are closed and open floating.
 pub fn default_workspace() -> Workspace {
     use Panel::*;
-    let left = split(SplitAxis::Vertical, 0.36, tabs(&[Explorer]), tabs(&[Library]));
-    let views = split(SplitAxis::Horizontal, 0.5, tabs(&[View3d]), tabs(&[View2d]));
-    let center = split(SplitAxis::Vertical, 0.52, tabs(&[Graph]), views);
-    let root = split(SplitAxis::Horizontal, 0.15, left, split(SplitAxis::Horizontal, 0.8, center, tabs(&[Properties])));
+    let left = split(Axis::Y, 0.36, tabs(&[Explorer]), tabs(&[Library]));
+    let views = split(Axis::X, 0.5, tabs(&[View3d]), tabs(&[View2d]));
+    let center = split(Axis::Y, 0.52, tabs(&[Graph]), views);
+    let root = split(Axis::X, 0.15, left, split(Axis::X, 0.8, center, tabs(&[Properties])));
     let mut workspace = Workspace::new(Layout { root: Some(root), floating: Vec::new() });
     for panel in Panel::ALL {
         if let Some(rect) = panel.float_rect() {
             let location = Location {
                 floating: Some(rect),
                 anchor: None,
-                placement: Placement::Tab { before: None },
+                placement: DockPlacement::Tab { before: None },
                 size: None,
                 stack: None,
                 sibling: Vec::new(),

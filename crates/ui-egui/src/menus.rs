@@ -1,6 +1,6 @@
 //! Menu actions and shortcuts share stable command ids
 
-use craft_keymap::{Active, Bindable, Binding, Chord, Keymap, Platform, Scope, Scopes};
+use craft_keymap::{Active, Binding, Chord, CommandDef, Keymap, Platform, Scope, Scopes};
 use egui::class::HasClasses as _;
 use serde_json::Value;
 
@@ -318,7 +318,7 @@ pub(crate) fn shortcut_table() -> Vec<(&'static str, &'static str)> {
 pub(crate) fn keymap(platform: Platform) -> Keymap {
     let catalog = shortcut_table()
         .into_iter()
-        .filter_map(|(id, text)| Some(Bindable::new(id, id, Scope::app()).with_default(Binding::new(parse_shortcut(text)?))))
+        .filter_map(|(id, text)| Some(CommandDef::new(id, id, Scope::app()).with_default(Binding::new(parse_shortcut(text)?))))
         .collect();
     Keymap::new(catalog, Scopes::new(), platform)
 }
