@@ -238,10 +238,13 @@ fn digest_name(stem: &str) -> bool {
     stem.len() == 64 && stem.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
+/// craft-atomic's staging file of a cache file: `.{file}.{pid}-{n}.craft_tmp`, where `file` is the cache file's name or
+/// its first part (older craft-atomic cut it to 64 characters).
 fn staging_name(name: &str) -> bool {
-    let Some((stem, suffix)) = name.strip_prefix('.').and_then(|name| name.strip_suffix(".craft_tmp")).and_then(|name| name.split_once('.')) else {
+    let Some((file, suffix)) = name.strip_prefix('.').and_then(|name| name.strip_suffix(".craft_tmp")).and_then(|name| name.rsplit_once('.')) else {
         return false;
     };
+    let stem = file.split_once('.').map_or(file, |(stem, _)| stem);
 
     digest_name(stem) && suffix.split_once('-').is_some_and(|(pid, counter)| pid.parse::<u32>().is_ok_and(|pid| pid > 0) && counter.parse::<u64>().is_ok())
 }

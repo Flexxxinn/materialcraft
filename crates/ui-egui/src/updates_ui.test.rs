@@ -178,7 +178,8 @@ fn an_offered_release_opens_the_prompt_over_the_window() {
 
     harness.run_steps(3);
 
-    let _ = harness.get_by_label("LATER");
+    let _ = harness.get_by_label("Update available");
+    let _ = harness.get_by_label("Later");
     assert!(harness.state().updates_rt.updater.prompt_open());
 }
 
