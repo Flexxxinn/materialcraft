@@ -111,6 +111,7 @@ fn frame(app: &mut MaterialCraftApp, ctx: &egui::Context) {
 fn the_menu_command_starts_a_check_on_the_next_frame() {
     let (mut app, checks, _) = app_with_source();
     let ctx = egui::Context::default();
+    crate::framework::install_headless(&ctx);
     frame(&mut app, &ctx);
     menus::invoke(&mut app, &ctx, COMMAND);
     assert!(app.updates_rt.check_requested);
@@ -167,7 +168,13 @@ fn an_offered_release_opens_the_prompt_over_the_window() {
 
     assert!(blocks_input(&app));
 
-    let mut harness = egui_kittest::Harness::builder().build_ui_state(|ui, app: &mut MaterialCraftApp| crate::windows::show(app, ui.ctx()), app);
+    let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(
+        |ui, app: &mut MaterialCraftApp| {
+            crate::windows::show(app, ui.ctx());
+            app.framework_dialogs.run(ui);
+        },
+        app,
+    );
 
     harness.run_steps(3);
 
@@ -191,7 +198,13 @@ fn a_requested_check_shows_its_progress() {
     check(&mut app);
     tick(&mut app, &egui::Context::default());
 
-    let mut harness = egui_kittest::Harness::builder().build_ui_state(|ui, app: &mut MaterialCraftApp| crate::windows::show(app, ui.ctx()), app);
+    let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(
+        |ui, app: &mut MaterialCraftApp| {
+            crate::windows::show(app, ui.ctx());
+            app.framework_dialogs.run(ui);
+        },
+        app,
+    );
     harness.run_steps(3);
     let _ = harness.get_by_label("Checking for updates…");
     drop(release);

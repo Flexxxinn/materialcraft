@@ -8,6 +8,7 @@ pub mod docking;
 pub mod explorer;
 pub mod export;
 pub mod fonts;
+pub mod framework;
 pub mod function;
 pub mod graph;
 mod graph_drag_payload;
@@ -26,6 +27,7 @@ mod preview_resolution;
 #[path = "property/mod.rs"]
 pub mod properties;
 mod shell;
+mod shortcut_dispatch;
 pub mod state;
 pub mod theme;
 pub mod thumbs;

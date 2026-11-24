@@ -115,10 +115,11 @@ pub(super) fn show(app: &mut MaterialCraftApp, editor: &mut FunctionEditor, ui: 
                 }
             });
             let list = candidates(app, editor, &search.text);
-            let (up, down, enter, escape) = ui.input(|input| {
+            let (up, down, enter) = ui.input(|input| {
                 let pressed = |key| !blocked && input.key_pressed(key);
-                (pressed(egui::Key::ArrowUp), pressed(egui::Key::ArrowDown), pressed(egui::Key::Enter), pressed(egui::Key::Escape))
+                (pressed(egui::Key::ArrowUp), pressed(egui::Key::ArrowDown), pressed(egui::Key::Enter))
             });
+            let escape = !blocked && crate::framework::escape_pressed(ui.ctx());
             if down {
                 search.selected_index = (search.selected_index + 1).min(list.len().saturating_sub(1));
             }

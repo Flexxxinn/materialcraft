@@ -156,7 +156,7 @@ fn keys(app: &mut MaterialCraftApp, ui: &Ui, response: &Response) {
     if pressed(Modifiers::NONE, Key::L) {
         app.view3d.tool = Tool::Light;
     }
-    if pressed(Modifiers::NONE, Key::Escape) {
+    if ui.input(|input| input.modifiers.is_none()) && crate::framework::escape_pressed(ui.ctx()) {
         app.view3d.selected = false;
     }
 }

@@ -71,10 +71,11 @@ pub(super) fn show(app: &mut MaterialCraftApp, ui: &mut Ui, cam: &GraphCamera) {
             if s.connect_to.is_some() {
                 list.retain(|definition| !definition.outputs.is_empty());
             }
-            let (up, down, enter, esc) = ui.input(|i| {
+            let (up, down, enter) = ui.input(|i| {
                 let pressed = |key| !blocked && i.key_pressed(key);
-                (pressed(egui::Key::ArrowUp), pressed(egui::Key::ArrowDown), pressed(egui::Key::Enter), pressed(egui::Key::Escape))
+                (pressed(egui::Key::ArrowUp), pressed(egui::Key::ArrowDown), pressed(egui::Key::Enter))
             });
+            let esc = !blocked && crate::framework::escape_pressed(ui.ctx());
             if down {
                 s.sel = (s.sel + 1).min(list.len().saturating_sub(1));
             }

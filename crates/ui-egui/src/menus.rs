@@ -1,6 +1,6 @@
 //! Menu actions and shortcuts share stable command ids
 
-use craft_keymap::{Active, Binding, Chord, CommandDef, Keymap, Platform, Scope, Scopes};
+use craft_keymap::{Binding, Chord, CommandDef, Keymap, Platform, Scope, Scopes};
 use egui::class::HasClasses as _;
 use serde_json::Value;
 
@@ -328,61 +328,61 @@ pub fn shortcut_of(id: &str) -> Option<&'static str> {
     CATALOG.iter().find(|i| i.id == id).and_then(|i| i.shortcut).or_else(|| materialcraft_engine::find(id).and_then(|c| c.shortcut))
 }
 
-/// Draw menu bars with aligned labels and a separate gutter for checkmarks.
+/// Draw menu bars with aligned labels and a separate gutter for checkmarks. Where the app draws the window's frame, the
+/// menu bar is the window's title bar: the framework's title bar holds it, with the move area and the caption buttons
+/// of the desktop's layout.
 pub fn menu_bar(app: &mut MaterialCraftApp, ui: &mut egui::Ui) {
     let tokens = Tokens::get(ui.ctx());
-    egui::Panel::top("menu_bar").exact_size(24.0).frame(egui::Frame::NONE.fill(tokens.chrome).inner_margin(egui::Margin::symmetric(6, 0))).show(ui, |ui| {
-        #[cfg(not(target_arch = "wasm32"))]
-        let window_layout = app.window_layout.clone();
-        #[cfg(not(target_arch = "wasm32"))]
-        if window_layout.is_some() {
-            craft_window::title_bar::empty_area(ui, ui.max_rect());
-        }
-
-        egui::MenuBar::new().ui(ui, |ui| {
-            let context = ui.ctx().clone();
-            #[cfg(not(target_arch = "wasm32"))]
-            if let Some(layout) = &window_layout {
-                crate::window_controls::buttons(ui, &context, &layout.left);
-            }
-            for top in TOP {
-                ui.menu_button(tr(top), |ui| {
-                    ui.set_min_width(220.0);
-                    let mut current_submenu: Option<&str> = None;
-                    let items: Vec<MenuItem> = CATALOG.iter().filter(|item| item.menu == top).copied().collect();
-                    for item in &items {
-                        if let Some(submenu) = item.sub {
-                            if current_submenu == Some(submenu) {
-                                continue;
-                            }
-
-                            current_submenu = Some(submenu);
-                            ui.menu_button(menu_label(tr(submenu)), |ui| {
-                                for entry in items.iter().filter(|entry| entry.sub == Some(submenu)) {
-                                    menu_item(app, &context, ui, entry);
-                                }
-                            });
-                            continue;
-                        }
-
-                        if item.label == "-" {
-                            ui.separator();
-                            continue;
-                        }
-
-                        menu_item(app, &context, ui, item);
-                    }
-                });
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            if let Some(layout) = window_layout.as_ref().filter(|layout| !layout.right.is_empty()) {
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    let mut right = layout.right.clone();
-                    right.reverse();
-                    crate::window_controls::buttons(ui, &context, &right);
-                });
+    #[cfg(not(target_arch = "wasm32"))]
+    if crate::window_controls::app_bar_is_title_bar(ui.ctx()) {
+        use craft_ui::contract::ShowContainer as _;
+        egui::Panel::top("menu_bar").frame(egui::Frame::NONE.fill(tokens.chrome)).show(ui, |ui| {
+            let bar = craft_ui::shell::TitleBar::new().show(ui, |ui, _| menus(app, ui)).output;
+            if bar.close_requested {
+                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
             }
         });
+        return;
+    }
+    egui::Panel::top("menu_bar")
+        .exact_size(24.0)
+        .frame(egui::Frame::NONE.fill(tokens.chrome).inner_margin(egui::Margin::symmetric(6, 0)))
+        .show(ui, |ui| menus(app, ui));
+}
+
+/// The top-level menus, in a menu bar
+fn menus(app: &mut MaterialCraftApp, ui: &mut egui::Ui) {
+    egui::MenuBar::new().ui(ui, |ui| {
+        let context = ui.ctx().clone();
+        for top in TOP {
+            ui.menu_button(tr(top), |ui| {
+                ui.set_min_width(220.0);
+                let mut current_submenu: Option<&str> = None;
+                let items: Vec<MenuItem> = CATALOG.iter().filter(|item| item.menu == top).copied().collect();
+                for item in &items {
+                    if let Some(submenu) = item.sub {
+                        if current_submenu == Some(submenu) {
+                            continue;
+                        }
+
+                        current_submenu = Some(submenu);
+                        ui.menu_button(menu_label(tr(submenu)), |ui| {
+                            for entry in items.iter().filter(|entry| entry.sub == Some(submenu)) {
+                                menu_item(app, &context, ui, entry);
+                            }
+                        });
+                        continue;
+                    }
+
+                    if item.label == "-" {
+                        ui.separator();
+                        continue;
+                    }
+
+                    menu_item(app, &context, ui, item);
+                }
+            });
+        }
     });
 }
 
@@ -460,6 +460,14 @@ pub fn shortcuts(app: &mut MaterialCraftApp, ctx: &egui::Context) {
         return;
     }
 
+    // A plain Escape no widget of MaterialCraft's took is the window's cancel: it runs the Escape shortcuts
+    if crate::framework::take_window_cancel(ctx) {
+        ctx.input_mut(|i| {
+            let modifiers = i.modifiers;
+            i.events.insert(0, egui::Event::Key { key: egui::Key::Escape, physical_key: Some(egui::Key::Escape), pressed: true, repeat: false, modifiers });
+        });
+    }
+
     // The desktop sends Copy, Cut and Paste events in place of their key presses
     if !ctx
         .input(|i| i.events.iter().any(|e| matches!(e, egui::Event::Key { pressed: true, .. } | egui::Event::Copy | egui::Event::Cut | egui::Event::Paste(_))))
@@ -491,7 +499,7 @@ pub fn shortcuts(app: &mut MaterialCraftApp, ctx: &egui::Context) {
     let gesture_in_progress = ctx.input(|i| i.pointer.any_down());
     let node_search_open = app.graph.search_is_open() || app.function_editor.as_ref().is_some_and(|editor| editor.search.is_some());
     let hits = ctx.input_mut(|i| {
-        app.dispatcher.dispatch_filtered(i, &app.keymap, &Active::NONE, |hit| {
+        app.dispatcher.dispatch_filtered(i, &app.keymap, |hit| {
             let id = hit.command.id.as_str();
             let keeps_escape = id == "ui.cook.cancel" && (!app.cooker.busy() || gesture_in_progress || node_search_open || label_selected);
             modality.allows(id) && !(label_selected && matches!(id, "edit.copy" | "edit.cut")) && !unavailable_clipboard_commands.contains(&id) && !keeps_escape
@@ -551,7 +559,7 @@ mod tests {
                 owners.entry(chord.to_string()).or_insert((id, chord));
             }
             for (id, chord) in owners.into_values() {
-                assert_eq!(map.lookup(&chord, false, &Active::NONE), craft_keymap::Lookup::Run(id.into()), "{chord}");
+                assert_eq!(map.lookup(&chord, false, &craft_keymap::Active::NONE), craft_keymap::Lookup::Run(id.into()), "{chord}");
             }
         }
     }
@@ -782,7 +790,7 @@ mod tests {
 
         let mut app = app();
         app.ui.recent.push("recent.sbs".into());
-        let mut harness = egui_kittest::Harness::builder().build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
+        let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
         harness.run_steps(2);
         harness.get_by_label("File").click();
         harness.run_steps(3);
@@ -802,7 +810,7 @@ mod tests {
 
         let mut app = app();
         app.dialogs.ask(craft_dialogs::FileDialog::open(), crate::native_dialogs::Then::OpenPackage);
-        let mut harness = egui_kittest::Harness::builder().build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
+        let mut harness = egui_kittest::Harness::builder().with_context_setup(crate::framework::install_headless).build_ui_state(|ui, app: &mut MaterialCraftApp| menu_bar(app, ui), app);
         harness.run_steps(2);
         harness.get_by_label("File").click();
         harness.run_steps(3);
@@ -898,7 +906,7 @@ mod tests {
     #[test]
     fn a_web_copy_press_runs_edit_copy() {
         let mut app = app();
-        app.dispatcher = craft_keymap::egui::Dispatcher::new().with_repeat(true).with_clipboard_events(true);
+        app.dispatcher = crate::shortcut_dispatch::Dispatcher::default();
         app.run("edit.selectAll", serde_json::json!({}));
         let ctx = egui::Context::default();
         copy_event_kept(&mut app, &ctx, press_c(vec![egui::Event::Copy]));
@@ -908,7 +916,7 @@ mod tests {
     #[test]
     fn selected_label_text_keeps_its_copy_on_the_web() {
         let mut app = app();
-        app.dispatcher = craft_keymap::egui::Dispatcher::new().with_repeat(true).with_clipboard_events(true);
+        app.dispatcher = crate::shortcut_dispatch::Dispatcher::default();
         app.run("edit.selectAll", serde_json::json!({}));
         let ctx = egui::Context::default();
         select_label_text(&ctx);

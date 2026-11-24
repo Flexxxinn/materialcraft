@@ -96,6 +96,9 @@ craft-materialx = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c9
 craft-mcmat = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
 craft-ui = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
 craft-behavior = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
+craft-host = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
+craft-theme = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
+craft-i18n = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc" }
 # Keyboard bindings (chords, dispatch and display text): storytold/craft-libs, MIT OR Apache-2.0
 craft-keymap = { git = "https://github.com/aiongg/craft-libs", rev = "22e82c930ec7062fba45757a8cac8ba5e3cb94bc", features = ["egui"] }
 # Native dialogs that do not block the event loop: storytold/craft-libs, MIT OR Apache-2.0

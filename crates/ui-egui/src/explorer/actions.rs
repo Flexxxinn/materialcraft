@@ -167,7 +167,7 @@ pub(super) fn rename_dialog(app: &mut MaterialCraftApp, ctx: &egui::Context) {
                 cancel |= ui.button(tr("Cancel")).clicked();
             });
         });
-    cancel |= ctx.input(|input| input.key_pressed(egui::Key::Escape));
+    cancel |= crate::framework::escape_pressed(ctx);
     app.ui.explorer.rename = if open && !cancel { Some((target.clone(), name.clone())) } else { None };
     if accept && activate(app, target.document()) {
         let mut parameters = target.parameters();
