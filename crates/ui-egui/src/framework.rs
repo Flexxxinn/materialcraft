@@ -9,11 +9,13 @@
 //! [`take_window_cancel`]; the graph editor is declared to the runtime with [`host_canvas`], which keeps Tab, the edit
 //! chords and the clipboard events in egui's input for MaterialCraft's shortcuts.
 
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use craft_host::target::ShellInfo;
 use craft_host::{AppInfo, Host};
+use craft_keymap::Overrides;
 use craft_ui::fonts::{I18nScripts, SystemFonts, UiFonts};
+use craft_ui::runtime::commands::{CommandInput, CommandSet as _, QuitCommand};
 use craft_ui::runtime::env::{RootEnv, Scale};
 use craft_ui::runtime::focus::{EditSet, KeepKeys, KeyUse};
 use craft_ui::runtime::frame::{FrameInput, FrameOutput};
@@ -80,9 +82,26 @@ pub fn install_headless(ctx: &egui::Context) {
     }
 }
 
-/// Who MaterialCraft is to the framework's dialogs (the update dialogs show its name).
+/// Who MaterialCraft is to the framework's dialogs (the update dialogs show its name and icon).
 pub(crate) fn host() -> Arc<Host> {
-    Arc::new(Host::builder(AppInfo { id: "materialcraft", name: "MaterialCraft", version: materialcraft_engine::VERSION }).build())
+    Arc::new(
+        Host::builder(AppInfo { id: "materialcraft", name: "MaterialCraft", version: materialcraft_engine::VERSION })
+            .icon_png(include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.materialcraft.png"))
+            .build(),
+    )
+}
+
+/// MaterialCraft quits with its own `ui.quit` (File > Exit, Ctrl+Q), which its shortcuts read from egui, so the
+/// framework's `window.quit` is unbound. Overrides are keyed by command id, which the command set gives.
+fn command_overrides() -> Arc<Overrides> {
+    static OVERRIDES: OnceLock<Arc<Overrides>> = OnceLock::new();
+    OVERRIDES
+        .get_or_init(|| {
+            let mut overrides = Overrides::new();
+            overrides.insert(QuitCommand::Quit.id(), Vec::new());
+            Arc::new(overrides)
+        })
+        .clone()
 }
 
 impl MaterialCraftApp {
@@ -95,8 +114,8 @@ impl MaterialCraftApp {
         embed::before_input(ctx, |output| self.frame_input(ctx, output, scale));
     }
 
-    /// The root values of this frame. MaterialCraft registers no commands with the runtime and lets it toggle no
-    /// chrome, so the output carries nothing it acts on. While one of MaterialCraft's own egui modals shows in the
+    /// The root values of this frame. MaterialCraft registers no commands with the runtime (it unbinds the framework's
+    /// quit, [`command_overrides`]) and lets it toggle no chrome, so the output carries nothing it acts on. While one of MaterialCraft's own egui modals shows in the
     /// root window, the runtime blocks the panels floated into windows of their own.
     pub(crate) fn frame_input(&mut self, ctx: &egui::Context, _output: FrameOutput, scale: f32) -> FrameInput {
         use crate::theme::Brightness;
@@ -107,7 +126,7 @@ impl MaterialCraftApp {
         let direction = if crate::i18n::is_rtl() { craft_i18n::Direction::Rtl } else { craft_i18n::Direction::Ltr };
         let root = RootEnv::new().mode(mode).scale(Scale::new(scale)).direction(direction);
         let app_modal = Modality::capture(self, ctx).is_blocked().then_some(ViewportId::ROOT);
-        FrameInput::new(root).host(Arc::clone(&self.framework_host)).app_modal(app_modal)
+        FrameInput::new(root).commands(CommandInput::new().overrides(command_overrides())).host(Arc::clone(&self.framework_host)).app_modal(app_modal)
     }
 
     /// The framework's part of `App::logic`, after MaterialCraft's own: the root window's close path. Unsaved work

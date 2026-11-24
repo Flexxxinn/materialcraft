@@ -39,19 +39,19 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 # Standard Base64 output; strict SBS decoding remains app-local
-craft-mime = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", version = "0.1.0" }
+craft-mime = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", version = "0.1.0" }
 # Read 3D meshes through craft-mesh; keep mesh processing app-local
-craft-mesh = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", default-features = false, features = ["obj", "gltf"] }
+craft-mesh = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", default-features = false, features = ["obj", "gltf"] }
 # Shared XML escaping and bounded XML parsing; SBS model and serialization policy stay app-local
-craft-xml = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-xml = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Shared SBS package/schema parsing, sniffing, embedded codec, and envelope writing (storytold/craft-libs#2496)
-craft-sbs = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-sbs = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Shared bounded ZIP archive reader and deterministic writer (storytold/craft-libs#2411)
-craft-zip = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-zip = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Bound SVG parsing and drawing through craft-svg
-craft-svg = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["tree-render"] }
+craft-svg = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["tree-render"] }
 # Shared raster image codecs
-craft-image-codecs = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-image-codecs = { version = "0.1.0", git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # internal
 materialcraft-core = { path = "crates/core" }
 materialcraft-geom = { path = "crates/geom" }
@@ -91,32 +91,32 @@ getrandom = "0.3"
 # Shared Craft egui components from storytold/craft-libs
 # MIT OR Apache-2.0
 egui_kittest = "0.37"
-craft-materialx = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-materialx = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # MCMAT v3 uses its merged archive revision and the matching ZIP crate
-craft-mcmat = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-ui = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-behavior = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-host = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-theme = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-i18n = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-mcmat = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-ui = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-behavior = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-host = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-theme = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-i18n = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Keyboard bindings (chords, dispatch and display text): storytold/craft-libs, MIT OR Apache-2.0
-craft-keymap = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["egui"] }
+craft-keymap = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["egui"] }
 # Native dialogs that do not block the event loop: storytold/craft-libs, MIT OR Apache-2.0
-craft-dialogs = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
-craft-platform = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-dialogs = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
+craft-platform = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # The platform quit and the macOS Quit menu item: storytold/craft-libs, MIT OR Apache-2.0
-craft-quit = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["ui"] }
-craft-menu = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-quit = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["ui"] }
+craft-menu = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Who draws the window frame, and an app-drawn strip as the title bar: storytold/craft-libs, MIT OR Apache-2.0
-craft-window = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["ui"] }
+craft-window = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["ui"] }
 # Release checks and self-updates for the desktop app: storytold/craft-libs, MIT OR Apache-2.0
-craft-update = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["ui"] }
+craft-update = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["ui"] }
 # Atomic persistence, at the suite's current revision
-craft-atomic = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-atomic = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Parse the optional shared font catalog at build time; the font repository is not a dependency
-craft-fonts-build = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591" }
+craft-fonts-build = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de" }
 # Float image planes and texture sampling for node cooking: storytold/craft-libs, MIT OR Apache-2.0
-craft-texture = { git = "https://github.com/aiongg/craft-libs", rev = "5d9f4b62cb7d62817cfa799e9451222bde7d6591", features = ["parallel"] }
+craft-texture = { git = "https://github.com/aiongg/craft-libs", rev = "cd87dc61f77d8470b2e9e6a1236f9a84ee0a64de", features = ["parallel"] }
 
 # egui 0.37 and winit: the suite's forks (storytold/egui, storytold/winit), as craft-libs pins them.
 [patch.crates-io]
