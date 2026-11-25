@@ -158,11 +158,13 @@ pub fn validate(workspace: &Workspace) -> Result<(), String> {
 #[derive(Clone, Debug)]
 pub struct Dock {
     workspace: Workspace,
+    /// A panel to bring in front of the other floating windows on the next frame.
+    raise: Option<Panel>,
 }
 
 impl Default for Dock {
     fn default() -> Self {
-        Dock { workspace: default_workspace() }
+        Dock { workspace: default_workspace(), raise: None }
     }
 }
 
@@ -195,7 +197,7 @@ impl Dock {
         if validate(&workspace).is_err() {
             return Dock::default();
         }
-        Dock { workspace }
+        Dock { workspace, raise: None }
     }
 
     pub fn workspace(&self) -> &Workspace {
@@ -227,7 +229,10 @@ impl Dock {
     pub fn focus(&mut self, p: Panel) {
         let mut next = self.workspace.clone();
         match next.set_visible(p, true, None, false, permissions) {
-            Ok(()) if validate(&next).is_ok() => self.workspace = next,
+            Ok(()) if validate(&next).is_ok() => {
+                self.workspace = next;
+                self.raise = Some(p);
+            }
             Ok(()) => log::warn!("panel {p:?} was not opened: it would break the graph's rules"),
             Err(error) => log::warn!("panel {p:?} was not opened: {error}"),
         }
@@ -319,11 +324,16 @@ pub fn show(app: &mut MaterialCraftApp, ui: &mut Ui) {
     let shown = app.docks.shown(&app.ui.dock.workspace);
     // The specs leave the app while its panels borrow it, and come back with their revision.
     let specs = std::mem::take(&mut app.docks.specs);
+    let raise = app.ui.dock.raise.take();
     // Panels arrange in a split tree around the graph; floating title bars only move windows.
     let config = DockConfig::default().new_dock_zones(false).title_bar_docks(false);
     let output = {
         let mut panels = Panels { app: &mut *app };
-        DockArea::new("Panels", Bind::given(Arc::clone(&shown)), &specs, &mut panels, config).show(ui)
+        let mut area = DockArea::new("Panels", Bind::given(Arc::clone(&shown)), &specs, &mut panels, config);
+        if let Some(panel) = raise {
+            area = area.raise(panel);
+        }
+        area.show(ui)
     };
     app.docks.specs = specs;
     if let Some(error) = &output.error {
@@ -402,6 +412,22 @@ mod tests {
         app.ui.windows.unsaved = None;
         app.ui.windows.shortcuts = true;
         assert_eq!(modal(&mut app), None, "the Shortcuts list does not block");
+    }
+
+    #[test]
+    fn a_focused_panel_is_raised_for_one_frame() {
+        let mut app = crate::MaterialCraftApp::headless(materialcraft_engine::sample_session(), crate::UiState::default());
+        let ctx = egui::Context::default();
+        crate::framework::install_headless(&ctx);
+        app.ui.dock.focus(Panel::Properties);
+        assert_eq!(app.ui.dock.raise, Some(Panel::Properties));
+
+        // The first frame only installs the fonts
+        for _ in 0..2 {
+            ctx.run_ui(egui::RawInput::default(), |ui| app.draw(ui)).textures_delta.clear();
+        }
+
+        assert_eq!(app.ui.dock.raise, None);
     }
 
     #[test]
