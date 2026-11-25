@@ -16,7 +16,7 @@ use craft_host::target::ShellInfo;
 use craft_host::{AppInfo, Host};
 use craft_keymap::{Chord, Key, Overrides};
 use craft_ui::fonts::{I18nScripts, SystemFonts, UiFonts};
-use craft_ui::runtime::commands::{CommandInput, CommandSet as _, QuitCommand};
+use craft_ui::runtime::commands::{CommandInput, CommandSet as _, NavCommand, QuitCommand};
 use craft_ui::runtime::env::{RootEnv, Scale};
 use craft_ui::runtime::focus::{self, EditSet, FocusTarget, KeyUse};
 use craft_ui::runtime::frame::{FrameInput, FrameOutput};
@@ -91,13 +91,16 @@ pub(crate) fn host() -> Arc<Host> {
 }
 
 /// MaterialCraft quits with its own `ui.quit` (File > Exit, Ctrl+Q), which its shortcuts read from egui, so the
-/// framework's `window.quit` is unbound. Overrides are keyed by command id, which the command set gives.
+/// framework's `window.quit` is unbound. So are its F6 and Shift+F6 pane moves: Preferences > Shortcuts assigns any
+/// chord to a node. Overrides are keyed by command id, which the command set gives.
 fn command_overrides() -> Arc<Overrides> {
     static OVERRIDES: OnceLock<Arc<Overrides>> = OnceLock::new();
     OVERRIDES
         .get_or_init(|| {
             let mut overrides = Overrides::new();
-            overrides.insert(QuitCommand::Quit.id(), Vec::new());
+            for id in [QuitCommand::Quit.id(), NavCommand::NextPane.id(), NavCommand::PreviousPane.id()] {
+                overrides.insert(id, Vec::new());
+            }
             Arc::new(overrides)
         })
         .clone()
@@ -114,7 +117,7 @@ impl MaterialCraftApp {
     }
 
     /// The root values of this frame. MaterialCraft registers no commands with the runtime (it unbinds the framework's
-    /// quit, [`command_overrides`]) and lets it toggle no chrome, so the output carries nothing it acts on. While one of MaterialCraft's own egui modals shows in the
+    /// quit and pane moves, [`command_overrides`]) and lets it toggle no chrome, so the output carries nothing it acts on. While one of MaterialCraft's own egui modals shows in the
     /// root window, the runtime blocks the panels floated into windows of their own.
     pub(crate) fn frame_input(&mut self, ctx: &egui::Context, _output: FrameOutput, scale: f32) -> FrameInput {
         use crate::theme::Brightness;
