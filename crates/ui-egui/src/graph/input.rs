@@ -239,7 +239,7 @@ pub(super) fn handle(
     }
 
     let at = app.graph.menu_at;
-    canvas.context_menu(|ui| match app.graph.menu_wire.clone() {
+    super::canvas_focus::context_menu(canvas, |ui| match app.graph.menu_wire.clone() {
         Some(wire) => wire_menu(app, ui, wire, at),
         None => super::context_menu::show(app, ui, at, None),
     });

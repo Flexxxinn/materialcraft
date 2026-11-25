@@ -50,7 +50,7 @@ pub(crate) fn show(app: &mut MaterialCraftApp, ui: &mut Ui) {
         let points = if slot.is_some() { geometry::wire(source.pos, pointer) } else { geometry::wire(pointer, source.pos) };
         ui.painter_at(response.rect).add(egui::epaint::CubicBezierShape::from_points_stroke(points, false, Color32::TRANSPARENT, Stroke::new(2.0, PORT_COLOR)));
     }
-    response.context_menu(|ui| super::context_menu::show(app, &mut editor, ui));
+    crate::graph::canvas_focus::context_menu(&response, |ui| super::context_menu::show(app, &mut editor, ui));
     crate::graph::canvas_focus::settle(app, ui, false);
     editor.inspected_node = crate::graph::node_selection::inspected(&editor.selection, editor.inspected_node);
     app.pattern_editor = Some(editor);

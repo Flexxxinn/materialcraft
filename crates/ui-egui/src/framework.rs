@@ -144,7 +144,7 @@ pub fn canvas_id() -> egui::Id {
 
 /// Declares the graph editor's canvas, drawn in this pass, as the window's document canvas. With nothing or the canvas
 /// focused, the edit chords and the clipboard events stay in egui's input for MaterialCraft's shortcuts. With
-/// `opens_search` the focused canvas claims a bare Tab, which opens its node search; Shift+Tab and F6 always move on from
+/// `opens_search` the focused canvas claims a bare Tab, which opens its node search; Shift+Tab always moves on from
 /// it, and Tab does otherwise.
 pub(crate) fn host_canvas(ctx: &egui::Context, opens_search: bool) {
     const KEYS: KeyUse = KeyUse::CANVAS.with_edits(EditSet::ALL);

@@ -1,10 +1,14 @@
 //! The graph canvas as a Tab stop: it keeps the focus Tab gives it, a press and an opening graph give it the focus, Tab
 //! over it opens the node search, and its keys work as with nothing focused
 
+use egui::accesskit::Role;
 use egui::{Event, Id, Key, Modifiers, PointerButton, vec2};
-use egui_kittest::{Harness, kittest::Queryable};
+use egui_kittest::{
+    Harness,
+    kittest::{By, Queryable},
+};
 use materialcraft_ui_egui::framework::{canvas_id, install_headless};
-use materialcraft_ui_egui::{MaterialCraftApp, UiState};
+use materialcraft_ui_egui::{MaterialCraftApp, UiState, menus};
 
 type AppHarness = Harness<'static, MaterialCraftApp>;
 
@@ -56,18 +60,16 @@ fn tab_walks_over_the_canvas_to_the_stops_after_it_and_back() {
 }
 
 #[test]
-fn tab_with_the_pointer_over_the_canvas_opens_the_search_and_shift_tab_and_f6_leave_it() {
+fn tab_with_the_pointer_over_the_canvas_opens_the_search_and_shift_tab_leaves_it() {
     let mut h = harness(materialcraft_engine::new_session());
     let canvas = Some(canvas_id());
     hover_canvas(&mut h);
-    for (modifiers, key) in [(Modifiers::SHIFT, Key::Tab), (Modifiers::NONE, Key::F6)] {
-        let left = press(&mut h, modifiers, key);
-        assert!(left.is_some() && left != canvas, "{key:?} leaves the canvas");
-        assert!(!search_open(&h));
-        h.ctx.memory_mut(|memory| memory.surrender_focus(left.unwrap()));
-        h.run_steps(2);
-        assert_eq!(focused(&h), canvas, "with nothing focused, the canvas under the pointer takes the keyboard");
-    }
+    let left = press(&mut h, Modifiers::SHIFT, Key::Tab);
+    assert!(left.is_some() && left != canvas, "Shift+Tab leaves the canvas");
+    assert!(!search_open(&h));
+    h.ctx.memory_mut(|memory| memory.surrender_focus(left.unwrap()));
+    h.run_steps(2);
+    assert_eq!(focused(&h), canvas, "with nothing focused, the canvas under the pointer takes the keyboard");
 
     press(&mut h, Modifiers::NONE, Key::Tab);
     assert!(search_open(&h), "Tab opens the search");
@@ -94,6 +96,42 @@ fn a_press_in_the_canvas_takes_the_keyboard_from_a_toolbar_button() {
     press(&mut h, Modifiers::NONE, Key::Space);
     assert!(search_open(&h), "Space goes to the canvas");
     assert!(!h.state().ui.windows.new_graph, "and not to the button");
+}
+
+#[test]
+fn enter_in_the_canvas_menu_adds_the_node_its_letter_filters() {
+    let mut h = harness(materialcraft_engine::new_session());
+    hover_canvas(&mut h);
+    let pos = h.state().graph.view.center();
+    for pressed in [true, false] {
+        h.event(Event::PointerButton { pos, button: PointerButton::Secondary, pressed, modifiers: Modifiers::NONE });
+    }
+    h.run_steps(3);
+    h.get_by_label("Add node").hover();
+    h.run_steps(3);
+    assert_eq!(focused(&h), Some(canvas_id()));
+
+    press(&mut h, Modifiers::NONE, Key::L);
+    press(&mut h, Modifiers::NONE, Key::Enter);
+    assert_eq!(h.state().session.graph().unwrap().nodes.len(), 1);
+    assert!(h.query_by_label("Add node").is_none(), "and the menu closes");
+}
+
+#[test]
+fn a_graph_created_by_keyboard_in_a_dialog_gets_the_focus() {
+    let mut h = harness(materialcraft_engine::sample_session());
+    let ctx = h.ctx.clone();
+    menus::invoke(h.state_mut(), &ctx, "ui.newFunctionGraph");
+    h.run_steps(4);
+    h.state_mut().ui.new_graph_package = None;
+    h.get(By::new().role(Role::Button).label("Create")).focus();
+    h.run_steps(2);
+    assert!(h.get(By::new().role(Role::Button).label("Create")).is_focused());
+
+    press(&mut h, Modifiers::NONE, Key::Enter);
+    h.run_steps(4);
+    assert!(h.state().session.graph().unwrap().function.is_some());
+    assert_eq!(focused(&h), Some(canvas_id()));
 }
 
 #[test]

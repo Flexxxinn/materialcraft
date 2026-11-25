@@ -206,7 +206,7 @@ pub(super) fn handle(
         editor.menu_at = camera.to_graph(pointer_position);
         editor.search = Some(FunctionSearch::at(editor.menu_at, None));
     }
-    response.context_menu(|ui| {
+    crate::graph::canvas_focus::context_menu(response, |ui| {
         super::context_menu::show(app, editor, ui, None);
     });
 }
