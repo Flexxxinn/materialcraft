@@ -462,8 +462,9 @@ pub fn shortcuts(app: &mut MaterialCraftApp, ctx: &egui::Context) {
 
     // A plain Escape no widget of MaterialCraft's took is the window's cancel: it runs the Escape shortcuts
     if crate::framework::take_window_cancel(ctx) {
+        let held = craft_ui::runtime::keys::escape_mods(ctx).unwrap_or_default();
+        let modifiers = egui::Modifiers { shift: held.shift, alt: held.alt, ..Default::default() };
         ctx.input_mut(|i| {
-            let modifiers = i.modifiers;
             i.events.insert(0, egui::Event::Key { key: egui::Key::Escape, physical_key: Some(egui::Key::Escape), pressed: true, repeat: false, modifiers });
         });
     }
