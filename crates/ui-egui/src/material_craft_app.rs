@@ -73,6 +73,8 @@ pub struct MaterialCraftApp {
     pub fonts: fonts::UiFonts,
     /// The icon font is installed (it takes effect on the frame after `set_fonts`)
     fonts_ready: bool,
+    /// The frame that only installed the fonts: egui runs it again once they are loaded.
+    fonts_frame: Option<u64>,
     ui_gesture_active: bool,
     /// The version this build names itself with: the Launcher's feed identity for a Nightly.
     pub build_version: String,
@@ -154,6 +156,7 @@ impl MaterialCraftApp {
             system_clipboard: None,
             fonts: fonts::UiFonts::default(),
             fonts_ready: false,
+            fonts_frame: None,
             ui_gesture_active: false,
             build_version: materialcraft_engine::VERSION.to_owned(),
             build_commit: String::new(),
@@ -499,6 +502,10 @@ impl MaterialCraftApp {
             ctx.request_repaint();
             return;
         }
+        if self.reruns_fonts_frame(ctx) {
+            ctx.request_repaint();
+            return;
+        }
 
         i18n::set_language(&self.ui.prefs.language);
         self.fonts.update(ctx, &self.ui.prefs.language, self.ui.windows.preferences);
@@ -558,15 +565,25 @@ impl MaterialCraftApp {
         }
     }
 
+    /// Whether this pass is egui's rerun of the frame that only installed the fonts
+    fn reruns_fonts_frame(&mut self, ctx: &egui::Context) -> bool {
+        self.fonts_frame = self.fonts_frame.filter(|frame| *frame == ctx.cumulative_frame_nr());
+        self.fonts_frame.is_some()
+    }
+
     /// Draw the whole window into `ui`
     pub fn draw(&mut self, ui: &mut egui::Ui) {
         crate::annotation::activate(self, crate::annotation::target(self));
+        let ctx = ui.ctx().clone();
         if !self.fonts_ready {
             self.fonts_ready = true;
+            self.fonts_frame = Some(ctx.cumulative_frame_nr());
+            return;
+        }
+        if self.reruns_fonts_frame(&ctx) {
             return;
         }
 
-        let ctx = ui.ctx().clone();
         let t0 = now_ms();
 
         // Tab can focus a menu or toolbar button while drawing; preserve keyboard ownership
