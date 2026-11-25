@@ -251,7 +251,7 @@ pub fn invoke(app: &mut MaterialCraftApp, ctx: &egui::Context, id: &str) {
         "ui.quit" => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
         "ui.preferences" => app.ui.windows.preferences = true,
         "ui.view.graph" => {}
-        "ui.resetLayout" => app.ui.dock = crate::docking::Dock::default(),
+        "ui.resetLayout" => app.ui.dock.reset(),
         "ui.closeAll" => crate::unsaved::guard(app, crate::unsaved::Guarded::Menu { id: id.to_string() }),
         "file.newPackage" => {
             app.run("file.newPackage", serde_json::json!({}));

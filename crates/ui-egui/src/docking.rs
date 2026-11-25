@@ -213,6 +213,12 @@ impl Dock {
         self.workspace.layout().panel_state(&p) == PanelState::Front
     }
 
+    /// Puts the default layout back. It replaces the workspace instead of editing it, which ends a drag in progress.
+    pub fn reset(&mut self) {
+        self.workspace.replace(default_workspace());
+        self.raise = None;
+    }
+
     /// Hide a visible panel, otherwise bring it up.
     pub fn toggle(&mut self, p: Panel) {
         if self.is_visible(p) { self.close(p) } else { self.focus(p) }
@@ -436,6 +442,18 @@ mod tests {
         let json = serde_json::to_string(&dock).unwrap();
         let back: Dock = serde_json::from_str(&json).unwrap();
         assert_eq!(back, dock);
+    }
+
+    #[test]
+    fn only_a_reset_replaces_the_workspace() {
+        let mut dock = Dock::default();
+        let start = dock.workspace().generation();
+        dock.focus(Panel::Console);
+        dock.close(Panel::Library);
+        assert_eq!(dock.workspace().generation(), start);
+        dock.reset();
+        assert_ne!(dock.workspace().generation(), start);
+        assert_eq!(dock, Dock::default());
     }
 
     #[test]
