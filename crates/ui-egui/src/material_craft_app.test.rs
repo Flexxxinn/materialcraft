@@ -104,7 +104,8 @@ mod close_order_tests {
         let mut clean = MaterialCraftApp::headless(materialcraft_engine::sample_session(), UiState::default());
         clean.fonts_ready = true;
         clean.session.modified = false;
-        assert!(!close_frame(&mut clean), "nothing to hold: the hook sees a close to take over");
+        // Only the app's decision: a close that goes ahead ends in the platform's quit, which macOS answers by canceling it.
+        assert!(!crate::unsaved::close_requested(&mut clean), "nothing to hold: the hook sees a close to take over");
     }
 }
 
