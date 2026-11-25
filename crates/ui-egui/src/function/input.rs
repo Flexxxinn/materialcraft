@@ -137,7 +137,8 @@ pub(super) fn handle(
         }
     }
 
-    if response.clicked() && !on_wire && !ui.input(|input| input.modifiers.alt) {
+    // A click of the pointer: Enter and Space on the focused canvas make it `clicked` too
+    if response.clicked_by(egui::PointerButton::Primary) && !on_wire && !ui.input(|input| input.modifiers.alt) {
         crate::graph::node_selection::select(&mut editor.selection, None, ui.input(|input| input.modifiers));
         crate::graph::node_selection::select(&mut editor.selected_wires, None, ui.input(|input| input.modifiers));
     }
@@ -189,7 +190,7 @@ pub(super) fn handle(
 
     // Space or Tab over the canvas, or a double-click on empty canvas, searches for a node to add
     // Tab moves focus between widgets, so it waits only for text fields and focus held before this frame
-    let space = !ui.ctx().egui_wants_keyboard_input() && ui.input(|input| input.key_pressed(egui::Key::Space));
+    let space = !crate::framework::widget_has_keyboard(ui.ctx()) && ui.input(|input| input.key_pressed(egui::Key::Space));
     let tab = app.ui.prefs.tab_opens_node_search
         && !app.graph.keyboard_was_focused
         && !ui.ctx().text_edit_focused()

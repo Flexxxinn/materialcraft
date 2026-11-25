@@ -158,7 +158,7 @@ pub(super) fn rename_dialog(app: &mut MaterialCraftApp, ctx: &egui::Context) {
         .show(ctx, |ui| {
             let response = ui.text_edit_singleline(&mut name);
             crate::widgets::name(&response, egui::Role::TextInput, "Name");
-            if !ctx.memory(|memory| memory.has_focus(response.id)) && !ctx.egui_wants_keyboard_input() {
+            if !ctx.memory(|memory| memory.has_focus(response.id)) && !crate::framework::widget_has_keyboard(ctx) {
                 response.request_focus();
             }
             accept |= response.lost_focus() && ui.input(|input| input.key_pressed(egui::Key::Enter));

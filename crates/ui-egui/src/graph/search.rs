@@ -5,6 +5,11 @@ use egui_phosphor::regular as icon;
 use materialcraft_engine::core::NodeId;
 use serde_json::json;
 
+/// The search popup's area
+pub(super) fn area() -> egui::Id {
+    egui::Id::unique("node-search")
+}
+
 pub(super) fn open_search(app: &mut MaterialCraftApp, ctx: &egui::Context, at: Pos2, connect: Option<(NodeId, String)>) {
     if crate::shell::modality::Modality::capture(app, ctx).is_blocked() {
         return;
@@ -45,7 +50,7 @@ pub(super) fn show(app: &mut MaterialCraftApp, ui: &mut Ui, cam: &GraphCamera) {
     let screen = cam.to_screen(s.at);
     let mut close = false;
     let mut pick: Option<&'static str> = None;
-    egui::Area::new(egui::Id::unique("node-search")).fixed_pos(screen).order(egui::Order::Foreground).show(ui.ctx(), |ui| {
+    egui::Area::new(area()).fixed_pos(screen).order(egui::Order::Foreground).show(ui.ctx(), |ui| {
         egui::Frame::popup(ui.style()).show(ui, |ui| {
             ui.set_width(260.0);
             if blocked {
@@ -110,7 +115,7 @@ pub(super) fn show(app: &mut MaterialCraftApp, ui: &mut Ui, cam: &GraphCamera) {
     });
     let clicked_out = !blocked
         && ui.input(|i| i.pointer.any_pressed())
-        && ui.ctx().pointer_interact_pos().is_some_and(|p| !ui.ctx().layer_id_at(p).is_some_and(|l| l.id == egui::Id::unique("node-search")));
+        && ui.ctx().pointer_interact_pos().is_some_and(|p| !ui.ctx().layer_id_at(p).is_some_and(|l| l.id == area()));
     if let Some(def) = pick.filter(|_| !crate::shell::modality::Modality::capture(app, ui.ctx()).is_blocked()) {
         let s = app.graph.search.take();
         if let Some(s) = s {
@@ -125,7 +130,11 @@ pub(super) fn show(app: &mut MaterialCraftApp, ui: &mut Ui, cam: &GraphCamera) {
                 app.run("graph.connect", json!({"from": id.0, "fromPort": output, "to": to.0, "toPort": port}));
             }
         }
+        crate::framework::focus_canvas(ui.ctx());
     } else if close || clicked_out {
         app.graph.search = None;
+        if close {
+            crate::framework::focus_canvas(ui.ctx());
+        }
     }
 }

@@ -454,9 +454,9 @@ fn menu_item(app: &mut MaterialCraftApp, context: &egui::Context, ui: &mut egui:
     }
 }
 
-/// Dispatch shortcuts unless a widget, popup or dialog owns the keyboard
+/// Dispatch shortcuts unless a widget other than the canvas, a popup or a dialog owns the keyboard
 pub fn shortcuts(app: &mut MaterialCraftApp, ctx: &egui::Context) {
-    if ctx.egui_wants_keyboard_input() || egui::Popup::is_any_open(ctx) {
+    if crate::framework::widget_has_keyboard(ctx) || egui::Popup::is_any_open(ctx) {
         return;
     }
 

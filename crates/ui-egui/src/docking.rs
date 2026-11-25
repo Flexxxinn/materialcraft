@@ -312,11 +312,6 @@ fn refresh_specs(app: &mut MaterialCraftApp) {
 // ---------------------------------------------------------------------------------------------
 // Drawing
 
-/// The graph editor's id as the window's document canvas.
-fn graph_canvas_id() -> egui::Id {
-    egui::Id::unique("materialcraft-graph-canvas")
-}
-
 /// Draw the dock (graph and panels) into `ui`.
 pub fn show(app: &mut MaterialCraftApp, ui: &mut Ui) {
     let ctx = ui.ctx().clone();
@@ -371,13 +366,12 @@ impl DockPanels<Panel> for Panels<'_> {
         }
     }
 
-    /// The graph editor, edge to edge in its group, as the window's document canvas.
+    /// The graph editor, edge to edge in its group.
     fn group_view(&mut self, panels: &[Panel], _: usize, ui: &mut Ui, at: GroupAt, _: &mut BodyCx<'_>) -> Option<f32> {
         let GroupAt::Show(rect) = at else { return None };
         if !panels.contains(&Panel::Graph) {
             return None;
         }
-        crate::framework::host_canvas(ui.ctx(), graph_canvas_id());
         crate::graph::show(self.app, ui);
         Some(rect.height())
     }

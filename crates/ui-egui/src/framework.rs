@@ -6,20 +6,22 @@
 //!
 //! The runtime takes Escape, Tab and the clipboard events for the whole window unless one of MaterialCraft's own egui
 //! widgets has the keyboard. The window's Escape is read with [`escape_pressed`] and taken with
-//! [`take_window_cancel`]; the graph editor is declared to the runtime with [`host_canvas`], which keeps Tab, the edit
-//! chords and the clipboard events in egui's input for MaterialCraft's shortcuts.
+//! [`take_window_cancel`]; the graph editor's canvas is declared to the runtime with [`host_canvas`], which keeps the edit
+//! chords and the clipboard events in egui's input for MaterialCraft's shortcuts, and Tab while it opens the node search.
+//! The focused canvas leaves the keyboard to the shortcuts ([`widget_has_keyboard`]).
 
 use std::sync::{Arc, OnceLock};
 
 use craft_host::target::ShellInfo;
 use craft_host::{AppInfo, Host};
-use craft_keymap::Overrides;
+use craft_keymap::{Chord, Key, Overrides};
 use craft_ui::fonts::{I18nScripts, SystemFonts, UiFonts};
 use craft_ui::runtime::commands::{CommandInput, CommandSet as _, QuitCommand};
 use craft_ui::runtime::env::{RootEnv, Scale};
-use craft_ui::runtime::focus::{EditSet, KeepKeys, KeyUse};
+use craft_ui::runtime::focus::{self, EditSet, FocusTarget, KeyUse};
 use craft_ui::runtime::frame::{FrameInput, FrameOutput};
 use craft_ui::runtime::keys::{Intent, with_window_intents};
+use craft_ui::runtime::overlay::{self, OpenFilter};
 use craft_ui::shell::embed::{self, CloseDecision};
 use craft_window::policy::Decision;
 use craft_window::system::WindowSystem;
@@ -134,12 +136,44 @@ impl MaterialCraftApp {
     }
 }
 
-/// Declares the graph editor `id`, drawn in this pass, as the window's document canvas. With nothing focused it is the
-/// window's key target: Tab (node search), the edit chords and the clipboard events stay in egui's input for
-/// MaterialCraft's shortcuts.
-pub(crate) fn host_canvas(ctx: &egui::Context, id: egui::Id) {
-    const KEYS: KeyUse = KeyUse::CANVAS.with_keep(KeepKeys::Tab).with_edits(EditSet::ALL);
-    craft_ui::runtime::focus::host_canvas(ctx, id, KEYS);
+/// The graph editor's canvas widget, the window's document canvas. The material, function and FX-Map editors share it,
+/// so it keeps the focus when one replaces another.
+pub fn canvas_id() -> egui::Id {
+    egui::Id::unique("materialcraft-graph-canvas")
+}
+
+/// Declares the graph editor's canvas, drawn in this pass, as the window's document canvas. With nothing or the canvas
+/// focused, the edit chords and the clipboard events stay in egui's input for MaterialCraft's shortcuts. With
+/// `opens_search` the focused canvas claims a bare Tab, which opens its node search; Shift+Tab and F6 always move on from
+/// it, and Tab does otherwise.
+pub(crate) fn host_canvas(ctx: &egui::Context, opens_search: bool) {
+    const KEYS: KeyUse = KeyUse::CANVAS.with_edits(EditSet::ALL);
+    const TAB: [Chord; 1] = [Chord::plain(Key::Tab)];
+    const SEARCH_KEYS: KeyUse = KEYS.with_claims(&TAB);
+    // The claim would hold with nothing focused too, where a bare Tab moves the focus into the window
+    let claims_tab = opens_search && ctx.memory(|memory| memory.has_focus(canvas_id()));
+    focus::host_canvas(ctx, canvas_id(), if claims_tab { SEARCH_KEYS } else { KEYS });
+}
+
+/// Gives the canvas the keyboard focus, with the arrows and Escape its own.
+pub(crate) fn focus_canvas(ctx: &egui::Context) {
+    focus::request(ctx, FocusTarget::Id(canvas_id()));
+}
+
+/// The widget that has the keyboard, the canvas left out: the focused canvas leaves the keyboard to MaterialCraft's
+/// shortcuts, as with nothing focused.
+pub(crate) fn focused_widget(ctx: &egui::Context) -> Option<egui::Id> {
+    ctx.memory(|memory| memory.focused()).filter(|focused| *focused != canvas_id())
+}
+
+/// Whether a widget other than the canvas has the keyboard.
+pub(crate) fn widget_has_keyboard(ctx: &egui::Context) -> bool {
+    focused_widget(ctx).is_some()
+}
+
+/// Whether a dialog, MaterialCraft's, egui's or the framework's, the home screen, or an egui menu or popup is up.
+pub(crate) fn overlay_open(app: &MaterialCraftApp, ctx: &egui::Context) -> bool {
+    app.ui.windows.home || Modality::capture(app, ctx).is_blocked() || egui::Popup::is_any_open(ctx) || overlay::any_open(ctx, OpenFilter::Modal)
 }
 
 /// Whether Escape was pressed in this pass: from egui while one of MaterialCraft's own widgets or popups has the

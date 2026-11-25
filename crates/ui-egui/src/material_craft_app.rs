@@ -570,7 +570,7 @@ impl MaterialCraftApp {
         let t0 = now_ms();
 
         // Tab can focus a menu or toolbar button while drawing; preserve keyboard ownership
-        self.graph.keyboard_was_focused = ctx.egui_wants_keyboard_input();
+        self.graph.keyboard_was_focused = crate::framework::widget_has_keyboard(&ctx);
         menus::menu_bar(self, ui);
         if self.ui.prefs.show_toolbar {
             toolbar::main_toolbar(self, ui);
@@ -585,7 +585,7 @@ impl MaterialCraftApp {
             crate::window_controls::resize_zones(ui);
         }
 
-        let gesture_active = ctx.input(|input| input.pointer.any_down()) || ctx.egui_wants_keyboard_input();
+        let gesture_active = ctx.input(|input| input.pointer.any_down()) || crate::framework::widget_has_keyboard(&ctx);
         if !gesture_active && (self.ui_gesture_active || ctx.input(|input| input.pointer.any_released())) {
             self.session.finish_edit();
         }

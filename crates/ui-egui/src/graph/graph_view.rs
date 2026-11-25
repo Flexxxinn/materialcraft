@@ -5,6 +5,10 @@ use materialcraft_engine::core::NodeId;
 pub struct GraphView {
     pub(crate) inspected_node: Option<NodeId>,
     pub(crate) keyboard_was_focused: bool,
+    /// The document, graph and nested editor shown last frame
+    pub(super) shown: Option<(u64, usize, materialcraft_engine::AnnotationTarget)>,
+    /// What is shown changed, and the canvas has yet to ask for the keyboard focus
+    pub(super) wants_focus: bool,
     pub(super) thumbnails_cleared: bool,
     pub(super) drag: Option<GraphDrag>,
     pub(super) search: Option<NodeSearch>,
@@ -56,6 +60,8 @@ impl Default for GraphView {
         GraphView {
             inspected_node: None,
             keyboard_was_focused: false,
+            shown: None,
+            wants_focus: false,
             thumbnails_cleared: false,
             drag: None,
             search: None,

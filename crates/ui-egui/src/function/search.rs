@@ -85,12 +85,17 @@ pub(crate) fn pick(app: &mut MaterialCraftApp, editor: &mut FunctionEditor, sear
     editor.inspected_node = Some(id);
 }
 
+/// The search popup's area
+pub(super) fn area() -> egui::Id {
+    egui::Id::unique("function-node-search")
+}
+
 pub(super) fn show(app: &mut MaterialCraftApp, editor: &mut FunctionEditor, ui: &mut Ui, camera: &GraphCamera) {
     let blocked = crate::shell::modality::Modality::capture(app, ui.ctx()).is_blocked();
     let Some(mut search) = editor.search.take() else { return };
 
     let tokens = Tokens::get(ui.ctx());
-    let area = egui::Id::unique("function-node-search");
+    let area = area();
     let mut close = false;
     let mut chosen = None;
     egui::Area::new(area).fixed_pos(camera.to_screen(search.at)).order(egui::Order::Foreground).show(ui.ctx(), |ui| {
@@ -155,7 +160,10 @@ pub(super) fn show(app: &mut MaterialCraftApp, editor: &mut FunctionEditor, ui: 
         && ui.ctx().pointer_interact_pos().is_some_and(|pointer| !ui.ctx().layer_id_at(pointer).is_some_and(|layer| layer.id == area));
     if let Some(candidate) = chosen.filter(|_| !blocked) {
         pick(app, editor, &search, &candidate);
-    } else if !close && !clicked_outside {
+        crate::framework::focus_canvas(ui.ctx());
+    } else if close {
+        crate::framework::focus_canvas(ui.ctx());
+    } else if !clicked_outside {
         editor.search = Some(search);
     }
 }
