@@ -503,7 +503,13 @@ pub fn shortcuts(app: &mut MaterialCraftApp, ctx: &egui::Context) {
         app.dispatcher.dispatch_filtered(i, &app.keymap, |hit| {
             let id = hit.command.id.as_str();
             let keeps_escape = id == "ui.cook.cancel" && (!app.cooker.busy() || gesture_in_progress || node_search_open || label_selected);
-            modality.allows(id) && !(label_selected && matches!(id, "edit.copy" | "edit.cut")) && !unavailable_clipboard_commands.contains(&id) && !keeps_escape
+            // The runtime's Quit runs Ctrl+Q, in the panels' own windows and from text fields too
+            let runtime_quits = id == "ui.quit";
+            modality.allows(id)
+                && !runtime_quits
+                && !(label_selected && matches!(id, "edit.copy" | "edit.cut"))
+                && !unavailable_clipboard_commands.contains(&id)
+                && !keeps_escape
         })
     });
     for hit in hits {
