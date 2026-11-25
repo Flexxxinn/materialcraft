@@ -56,9 +56,9 @@ pub(crate) fn under_pointer(ui: &Ui, canvas: &Response, hovered: bool, search: I
 }
 
 /// Settle the focus and Tab once the canvas has handled its input. A graph that opens or becomes active asks for the
-/// focus, and so does the canvas while nothing is focused and Tab opens its node search (`opens_search`): a click on a
-/// panel leaves the focus nowhere. It waits for a dialog, menu or popup to close, and leaves the focus with a text field
-/// and, after [`FOCUS_PASSES`], with a widget of another window.
+/// focus, and so does the canvas while nothing is focused and Tab opens its node search (`opens_search`). It waits for a
+/// dialog, menu or popup to close, and leaves the focus with a text field and, after [`FOCUS_PASSES`], with a widget
+/// of another window.
 pub(crate) fn settle(app: &mut MaterialCraftApp, ui: &Ui, opens_search: bool) {
     let ctx = ui.ctx();
     let opens_search = opens_search && app.ui.prefs.tab_opens_node_search && !Modality::capture(app, ctx).is_blocked();
