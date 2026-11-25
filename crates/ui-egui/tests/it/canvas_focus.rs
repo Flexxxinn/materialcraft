@@ -78,6 +78,21 @@ fn tab_with_the_pointer_over_the_canvas_opens_the_search_and_shift_tab_leaves_it
 }
 
 #[test]
+fn escape_releases_the_keyboard_from_the_dock_controls_after_the_canvas() {
+    let mut h = harness(materialcraft_engine::new_session());
+    // The 3D view's tab row and its drag band
+    for stop in 1..=2 {
+        h.ctx.memory_mut(|memory| memory.request_focus(canvas_id()));
+        h.run_steps(2);
+        for _ in 0..stop {
+            press(&mut h, Modifiers::NONE, Key::Tab);
+        }
+        assert!(focused(&h).is_some_and(|id| id != canvas_id()), "Tab reaches stop {stop} after the canvas");
+        assert_eq!(press(&mut h, Modifiers::NONE, Key::Escape), None, "Escape releases stop {stop}");
+    }
+}
+
+#[test]
 fn a_press_in_the_canvas_takes_the_keyboard_from_a_toolbar_button() {
     let mut h = harness(materialcraft_engine::new_session());
     h.get_by_label("Open package... (Ctrl+O)").focus();

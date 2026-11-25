@@ -187,6 +187,19 @@ pub(crate) fn take_window_cancel(ctx: &egui::Context) -> bool {
     window_cancel(ctx, true)
 }
 
+/// Releases the keyboard from a framework widget (a dock tab row, a panel's drag band) when nothing took the Escape
+/// pressed on it, as egui does for MaterialCraft's own widgets. Called last in the UI: what is drawn before it takes its
+/// Escape first. A framework modal keeps the focus in it, and a text field its own.
+pub(crate) fn release_keyboard(ctx: &egui::Context) {
+    if let Some(focused) = focused_widget(ctx)
+        && !ctx.text_edit_focused()
+        && !overlay::any_open(ctx, OpenFilter::Modal)
+        && take_window_cancel(ctx)
+    {
+        ctx.memory_mut(|memory| memory.surrender_focus(focused));
+    }
+}
+
 /// Whether the window's cancel is there and untaken; `take` takes it.
 fn window_cancel(ctx: &egui::Context, take: bool) -> bool {
     let mut pending = false;

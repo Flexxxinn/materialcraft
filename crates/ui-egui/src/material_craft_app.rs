@@ -597,6 +597,7 @@ impl MaterialCraftApp {
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(theme::Tokens::get(&ctx).chrome)).show(ui, |ui| docking::show(self, ui));
         windows::show(self, &ctx);
         self.framework_dialogs.run(ui);
+        crate::framework::release_keyboard(&ctx);
         #[cfg(not(target_arch = "wasm32"))]
         if crate::window_controls::app_draws_frame(&ctx) {
             crate::window_controls::resize_zones(ui);
