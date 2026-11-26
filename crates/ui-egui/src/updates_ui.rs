@@ -1,8 +1,10 @@
 //! Software updates on the desktop: the background check at startup, Help > Check for updates and
-//! the prompts that report them. A Nightly has no updater: the Launcher installs it.
+//! the prompts that report them, as craft-update's dialogs on the app's
+//! [`DialogHost`](craft_ui::dialog::DialogHost). A Nightly has no updater: the Launcher installs it.
 
+use craft_ui::dialog::DialogResult;
+use craft_update::stack_dialogs::{CheckChoice, UpdateCheckDialog};
 use craft_update::updater::{Action, Status, Updater};
-use craft_update::{CheckResultDialog, CheckResultResponse};
 
 use crate::MaterialCraftApp;
 
@@ -70,9 +72,9 @@ pub(crate) fn tick(app: &mut MaterialCraftApp, ctx: &egui::Context) {
     rt.repaint = Some(ctx.clone());
     let Some(updater) = rt.updater.as_mut() else { return };
     if std::mem::take(&mut rt.check_requested) {
-        updater.check_now(ctx);
+        updater.check_now();
     } else if rt.startup_check {
-        updater.check_at_start(ctx);
+        updater.check_at_start();
     }
     updater.tick(ctx);
 }
@@ -84,25 +86,46 @@ fn result_window_shows(status: &Status, prompt_open: bool) -> bool {
     !prompt_open && !matches!(status, Status::Idle)
 }
 
+/// One pass of the update flow, before the dialog host runs: answers the result dialog closed in
+/// the last pass, drives the startup prompt, and keeps the result dialog open and current while the
+/// updater has something to report
 pub(crate) fn show(app: &mut MaterialCraftApp, ctx: &egui::Context) {
     let Some(updater) = app.updates_rt.updater.as_mut() else { return };
     // An installation, and the close for a ready update, wait until nothing is unsaved
     let clean = !crate::unsaved::needs_confirmation(&app.session);
-    match updater.show_if(ctx, clean) {
+    // Answered before the dialog is kept open below, so a dismissed outcome does not open again at once
+    match app.framework_dialogs.take::<UpdateCheckDialog>() {
+        Some(DialogResult::Ok(CheckChoice::CheckNow | CheckChoice::CheckAgain)) => app.updates_rt.check_requested = true,
+        // The next `run` asks the window to close once nothing is unsaved
+        Some(DialogResult::Ok(CheckChoice::RestartToUpdate)) => updater.restart_to_update(),
+        Some(DialogResult::Ok(CheckChoice::Update)) => {
+            updater.request_install(clean);
+        }
+        Some(DialogResult::Ok(CheckChoice::Download)) => ctx.open_url(egui::OpenUrl::new_tab(crate::UPDATE_APP.releases_url())),
+        // Closing the dialog dismisses the outcome it showed
+        Some(_) => updater.dismiss_status(),
+        None => {}
+    }
+    match updater.run(&mut app.framework_dialogs, clean) {
         Action::OpenUrl(url) => ctx.open_url(egui::OpenUrl::new_tab(url)),
         Action::Close => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
-        Action::None => {}
+        _ => {}
     }
     // A found update opens the startup prompt and leaves the status idle, which ends the result dialog
-    if result_window_shows(updater.status(), updater.prompt_open()) {
-        match CheckResultDialog::new(&crate::UPDATE_APP, materialcraft_engine::VERSION).with_translator(translate).show(ctx, updater.status()) {
-            CheckResultResponse::None => {}
-            // Closing the dialog dismisses the outcome it showed
-            CheckResultResponse::Close => updater.dismiss_status(),
-            CheckResultResponse::CheckAgain => app.updates_rt.check_requested = true,
-            // The next `show_if` asks the window to close once nothing is unsaved
-            CheckResultResponse::RestartToUpdate => updater.restart_to_update(),
-        }
+    let shows = result_window_shows(updater.status(), updater.prompt_open());
+    let (status, installing, message) = (updater.status().clone(), updater.is_installing(), updater.status_message());
+    let dialogs = &mut app.framework_dialogs;
+    if shows && !dialogs.is_open::<UpdateCheckDialog>() {
+        dialogs.open(UpdateCheckDialog::new(materialcraft_engine::VERSION));
+    } else if !shows && dialogs.is_open::<UpdateCheckDialog>() {
+        dialogs.cancel::<UpdateCheckDialog>(ctx);
+        // Hidden for the prompt, not dismissed: the outcome shows again after it
+        let _ = dialogs.take::<UpdateCheckDialog>();
+    }
+    if let Some(dialog) = dialogs.get_mut::<UpdateCheckDialog>() {
+        dialog.set_status(status);
+        dialog.set_installing(installing);
+        dialog.set_message(message);
     }
 }
 

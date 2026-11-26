@@ -239,10 +239,10 @@ fn main() {
         prev(info);
     }));
     let session = initial_session(&args);
-    let window_frame = craft_window::Choice::probe(craft_window::Prefix::new("MATERIALCRAFT")).into_frame();
-    let mut viewport = craft_window::decorate(
+    let window_frame = materialcraft_ui_egui::framework::decide_frame();
+    let mut viewport = craft_window::policy::apply(
         egui::ViewportBuilder::default().with_title(os_window::name_for(os_window::identity())).with_inner_size(DEFAULT_SIZE).with_min_inner_size(MIN_SIZE),
-        &window_frame,
+        &window_frame.frame,
     );
     // Stable keeps eframe's implicit app id, so its saved layout stays where it is; a Nightly
     // carries its own id so docks, compositor rules and the taskbar list it separately.
@@ -282,6 +282,7 @@ fn main() {
         os_window::name_for(os_window::identity()),
         options,
         Box::new(move |cc| {
+            materialcraft_ui_egui::framework::install(&cc.egui_ctx, window_frame)?;
             let mut app = MaterialCraftApp::new(cc, session);
             app.build_version = BUILT_VERSION.to_owned();
             app.build_commit = BUILD_SHA.to_owned();
@@ -291,7 +292,6 @@ fn main() {
             app.at_exit = Some(Box::new(move || {
                 nightly_session::finish_once(&hook_session, hook_notice.load(std::sync::atomic::Ordering::Relaxed));
             }));
-            app.window_layout = window_frame.layout().cloned();
             // Called from the creator: winit installs its default menu before this runs. On error winit's menu stays, whose Quit does not ask
             #[cfg(target_os = "macos")]
             if let Err(error) = craft_menu::mac::install_app_menu(&cc.egui_ctx, os_window::name_for(os_window::identity())) {
